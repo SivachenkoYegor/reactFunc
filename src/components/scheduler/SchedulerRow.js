@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEdit, faStar as sStar, faTimes} from "@fortawesome/free-solid-svg-icons";
 import {faStar as rStar} from "@fortawesome/free-regular-svg-icons";
@@ -6,46 +6,45 @@ import {connect} from "react-redux";
 import {markImportantTask, markTask, removeTask, updateTaskTitle} from "../../redux/actions";
 import {toast} from "react-toastify";
 
-class SchedulerRow extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      edit: false,
-      inputValue: '',
-      prevValue: ''
-    };
-    this.textInput = React.createRef();
-    this.focusTextInput = this.focusTextInput.bind(this);
-  }
+const useFocus = () => {
+  const htmlElRef = useRef(null);
+  const setFocus = () => {htmlElRef.current &&  htmlElRef.current.focus()};
 
-  focusTextInput() {
-    this.textInput.current.focus();
-  }
+  return [ htmlElRef, setFocus ]
+};
 
-  removeI = (id) => {
-    this.props.removeTask(id)
-  };
-  editTitle = (id) => {
-    this.props.updateTaskTitle(id, this.state.inputValue);
-    this.setState({edit: !this.state.edit})
+const SchedulerRow = (props) => {
+  const [inputActive, setActive] = useState(false);
+  const [inputValue, setValue] = useState('');
+  const [inputRef, setFocus] = useFocus();
+
+  const focusTextInput = () => {
+    setFocus();
   };
 
-  componentDidMount() {
-    this.setState({inputValue: this.props.task.title})
-  }
+  const removeI = (id) => {
+    props.removeTask(id)
+  };
 
-  keyChecker = (e) => {
+  const editTitle = (id) => {
+    props.updateTaskTitle(id, inputValue);
+    setActive(!inputActive)
+  };
+
+  useEffect(() => {
+    setValue(props.task.title)
+  }, []);
+
+  const keyChecker = (e) => {
     if (e.keyCode === 27) {
-      this.setState({
-        inputValue: this.props.task.title,
-        edit: !this.state.edit
-      })
+      setValue(props.task.title);
+      setActive(!inputActive);
     }
     if (e.keyCode === 13) {
-      if (this.state.inputValue) {
-        if (this.state.inputValue.length < 50) {
-          this.editTitle(this.props.task.id);
-          this.setState({edit: !this.state.edit})
+      if (inputValue) {
+        if (inputValue.length < 50) {
+          editTitle(props.task.id);
+          setActive(!inputActive);
         } else {
           toast.warn("Too long text in text field");
         }
@@ -55,47 +54,45 @@ class SchedulerRow extends React.Component {
     }
   };
 
-  render() {
-    return (
-      <div className="task-list-item"
-           style={{backgroundColor: this.props.task.done ? "rgba(31, 30, 29,0.2)" : "white"}}>
-        <div className="item-checkbox">
-          <input checked={this.props.task.done ? "checked" : ""} onClick={() => {
-            this.props.markTask(this.props.task.id)
-          }} type="checkbox" id={this.props.task.id}/>
-          <label htmlFor={this.props.task.id}></label>
-        </div>
-        <div className="task-items-content">
-          <input
-            onKeyDown={(e) => {
-              this.keyChecker(e);
-            }}
-            disabled={this.state.edit ? '' : 'disabled'}
-            key={this.props.task.id}
-            type="text"
-            value={this.state.inputValue}
-            ref={this.textInput}
-            onChange={event => {
-              this.setState({inputValue: event.target.value})
-            }}
-            style={{backgroundColor: this.props.task.done ? "rgba(31, 30, 29,0.1)" : "white"}}/>
-        </div>
-        <div className="task-items-actions">
-          <a onClick={() => {
-            this.props.markImportantTask(this.props.task.id);
-          }}><FontAwesomeIcon icon={this.props.task.important ? sStar : rStar}/></a>
-          <a onClick={async () => {
-            await this.setState({edit: !this.state.edit});
-            this.focusTextInput();
-          }}><FontAwesomeIcon icon={faEdit}/></a>
-          <a onClick={() => {
-            this.removeI(this.props.task.id)
-          }}><FontAwesomeIcon icon={faTimes}/></a>
-        </div>
+  return (
+    <div className="task-list-item"
+         style={{backgroundColor: props.task.done ? "rgba(31, 30, 29,0.2)" : "white"}}>
+      <div className="item-checkbox">
+        <input checked={props.task.done ? "checked" : ""} onClick={() => {
+          props.markTask(props.task.id)
+        }} type="checkbox" id={props.task.id}/>
+        <label htmlFor={props.task.id}></label>
       </div>
-    )
-  }
-}
+      <div className="task-items-content">
+        <input
+          onKeyDown={(e) => {
+            keyChecker(e);
+          }}
+          disabled={inputActive ? '' : 'disabled'}
+          key={props.task.id}
+          type="text"
+          value={inputValue}
+          ref={inputRef}
+          onChange={event => {
+            setValue(event.target.value)
+          }}
+          style={{backgroundColor: props.task.done ? "rgba(31, 30, 29,0.1)" : "white"}}/>
+      </div>
+      <div className="task-items-actions">
+        <a onClick={() => {
+          props.markImportantTask(props.task.id);
+        }}><FontAwesomeIcon icon={props.task.important ? sStar : rStar}/></a>
+        <a onClick={async () => {
+          await setActive(!inputActive);
+          focusTextInput();
+        }}><FontAwesomeIcon icon={faEdit}/></a>
+        <a onClick={() => {
+          removeI(props.task.id)
+        }}><FontAwesomeIcon icon={faTimes}/></a>
+      </div>
+    </div>
+  )
+};
 
 export default connect(() => {
   return {}
