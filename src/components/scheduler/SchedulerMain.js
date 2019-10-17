@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useEffect } from 'react';
 import './Scheduler.css';
 import {connect} from 'react-redux';
 import {addTask, removeTask, requestTasks} from '../../redux/actions';

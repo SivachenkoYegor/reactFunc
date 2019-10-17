@@ -9,6 +9,8 @@
     "@fortawesome/react-fontawesome": "^0.1.5",
     "axios": "^0.19.0",
     "axios-progress-bar": "^1.2.0",
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-react-16": "^1.15.1",
     "json-server": "^0.15.1",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
